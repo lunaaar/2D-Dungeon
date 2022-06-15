@@ -569,7 +569,7 @@ MonoBehaviour:
   - {fileID: 1187960389}
   - {fileID: 1517171904}
   background: {fileID: 1937286734}
-  coolDownInSeconds: 0.08
+  coolDownInSeconds: 0.1
 --- !u!1 &955385736
 GameObject:
   m_ObjectHideFlags: 0
