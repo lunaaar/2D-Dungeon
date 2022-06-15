@@ -11,6 +11,7 @@ public class CharacterSelect : MonoBehaviour
 
     private GameObject selectedCharacter;
     private Image image;
+    private Animator anim;
     private int activeIndex;
 
     public float coolDownInSeconds;
@@ -23,6 +24,8 @@ public class CharacterSelect : MonoBehaviour
         activeIndex = 0;
 
         image = selectedCharacter.GetComponent<Image>();
+        anim = selectedCharacter.GetComponent<Animator>();
+        anim.Play("Hover Menu");
 
         image.color = new Color32(255, 255, 255, 255);
     }
@@ -38,12 +41,14 @@ public class CharacterSelect : MonoBehaviour
         if (Time.time > currentTime)
         {
             image = selectedCharacter.GetComponent<Image>();
+            anim = selectedCharacter.GetComponent<Animator>();
 
             if (Input.GetKey(KeyCode.RightArrow))
             {
                 
                 image.color = new Color32(90, 90, 90, 255);
-                
+                anim.Play("Non Hover Menu");
+
                 activeIndex += 1;
                 activeIndex = activeIndex % 8;
 
@@ -51,6 +56,9 @@ public class CharacterSelect : MonoBehaviour
 
                 image = selectedCharacter.GetComponent<Image>();
                 image.color = new Color32(255, 255, 255, 255);
+
+                anim = selectedCharacter.GetComponent<Animator>();
+                anim.Play("Hover Menu");
 
                 // Tried MoveTowards, didn't give desired result. Speed ended up getting to a point of too high, and still didn't feel right because
                 // Position moved too fast for the movetowards. I need to figure out how to set a delay.
@@ -64,6 +72,7 @@ public class CharacterSelect : MonoBehaviour
             if (Input.GetKey(KeyCode.LeftArrow))
             {
                 image.color = new Color32(90, 90, 90, 255);
+                anim.Play("Non Hover Menu");
 
                 if (activeIndex - 1 < 0)
                     activeIndex = 7;
@@ -75,6 +84,9 @@ public class CharacterSelect : MonoBehaviour
                 image = selectedCharacter.GetComponent<Image>();
                 image.color = new Color32(255, 255, 255, 255);
 
+                anim = selectedCharacter.GetComponent<Animator>();
+                anim.Play("Hover Menu");
+
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
                 currentTime = Time.time + coolDownInSeconds;
@@ -84,6 +96,7 @@ public class CharacterSelect : MonoBehaviour
             if (Input.GetKey(KeyCode.DownArrow))
             {
                 image.color = new Color32(90, 90, 90, 255);
+                anim.Play("Non Hover Menu");
 
                 activeIndex += 4;
                 activeIndex = activeIndex % 8;
@@ -93,6 +106,9 @@ public class CharacterSelect : MonoBehaviour
                 image = selectedCharacter.GetComponent<Image>();
                 image.color = new Color32(255, 255, 255, 255);
 
+                anim = selectedCharacter.GetComponent<Animator>();
+                anim.Play("Hover Menu");
+
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
                 currentTime = Time.time + coolDownInSeconds;
@@ -101,6 +117,7 @@ public class CharacterSelect : MonoBehaviour
             if (Input.GetKey(KeyCode.UpArrow))
             {
                 image.color = new Color32(90, 90, 90, 255);
+                anim.Play("Non Hover Menu");
 
                 if (activeIndex - 4 < 0)
                     activeIndex += 4;
@@ -113,6 +130,9 @@ public class CharacterSelect : MonoBehaviour
 
                 image = selectedCharacter.GetComponent<Image>();
                 image.color = new Color32(255, 255, 255, 255);
+
+                anim = selectedCharacter.GetComponent<Animator>();
+                anim.Play("Hover Menu");
 
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
