@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 using UnityEngine;
 
 public class CharacterSelect : MonoBehaviour
@@ -9,6 +10,7 @@ public class CharacterSelect : MonoBehaviour
     public GameObject background;
 
     private GameObject selectedCharacter;
+    private Image image;
     private int activeIndex;
 
     public float coolDownInSeconds;
@@ -19,6 +21,10 @@ public class CharacterSelect : MonoBehaviour
     {
         selectedCharacter = playerPrefabs[0];
         activeIndex = 0;
+
+        image = selectedCharacter.GetComponent<Image>();
+
+        image.color = new Color32(255, 255, 255, 255);
     }
 
     
@@ -26,14 +32,25 @@ public class CharacterSelect : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
+
+        //image.GetComponent<Image>().color = new Color32(255, 255, 225, 100);
+
         if (Time.time > currentTime)
         {
+            image = selectedCharacter.GetComponent<Image>();
+
             if (Input.GetKey(KeyCode.RightArrow))
             {
+                
+                image.color = new Color32(90, 90, 90, 255);
+                
                 activeIndex += 1;
                 activeIndex = activeIndex % 8;
 
                 selectedCharacter = playerPrefabs[activeIndex];
+
+                image = selectedCharacter.GetComponent<Image>();
+                image.color = new Color32(255, 255, 255, 255);
 
                 // Tried MoveTowards, didn't give desired result. Speed ended up getting to a point of too high, and still didn't feel right because
                 // Position moved too fast for the movetowards. I need to figure out how to set a delay.
@@ -46,12 +63,18 @@ public class CharacterSelect : MonoBehaviour
 
             if (Input.GetKey(KeyCode.LeftArrow))
             {
+                image.color = new Color32(90, 90, 90, 255);
+
                 if (activeIndex - 1 < 0)
                     activeIndex = 7;
                 else
                     activeIndex -= 1;
 
                 selectedCharacter = playerPrefabs[activeIndex];
+
+                image = selectedCharacter.GetComponent<Image>();
+                image.color = new Color32(255, 255, 255, 255);
+
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
                 currentTime = Time.time + coolDownInSeconds;
@@ -60,10 +83,16 @@ public class CharacterSelect : MonoBehaviour
 
             if (Input.GetKey(KeyCode.DownArrow))
             {
+                image.color = new Color32(90, 90, 90, 255);
+
                 activeIndex += 4;
                 activeIndex = activeIndex % 8;
 
                 selectedCharacter = playerPrefabs[activeIndex];
+
+                image = selectedCharacter.GetComponent<Image>();
+                image.color = new Color32(255, 255, 255, 255);
+
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
                 currentTime = Time.time + coolDownInSeconds;
@@ -71,6 +100,8 @@ public class CharacterSelect : MonoBehaviour
 
             if (Input.GetKey(KeyCode.UpArrow))
             {
+                image.color = new Color32(90, 90, 90, 255);
+
                 if (activeIndex - 4 < 0)
                     activeIndex += 4;
                 else
@@ -79,6 +110,10 @@ public class CharacterSelect : MonoBehaviour
                 activeIndex = activeIndex % 8;
 
                 selectedCharacter = playerPrefabs[activeIndex];
+
+                image = selectedCharacter.GetComponent<Image>();
+                image.color = new Color32(255, 255, 255, 255);
+
                 background.transform.position = playerPrefabs[activeIndex].transform.position;
 
                 currentTime = Time.time + coolDownInSeconds;
