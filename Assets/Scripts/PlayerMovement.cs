@@ -4,8 +4,10 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [HideInInspector]
     public Rigidbody2D rigidBody;
     private SpriteRenderer spriteRenderer;
+    private AnimationScript animator;
 
     [Space]
     [Header("Movement Stats")]
@@ -20,15 +22,20 @@ public class PlayerMovement : MonoBehaviour
     public bool isInvisible;
 
     [Space]
+    public int side = 1;
+
+    [Space]
     private bool hasRolled;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(DisableMovement(.1f));
+        StartCoroutine(DisableMovement(.01f));
+
         rigidBody = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<AnimationScript>();
     }
 
     // Update is called once per frame
@@ -50,6 +57,18 @@ public class PlayerMovement : MonoBehaviour
                 Roll(xRaw, yRaw);
             }
         }
+
+        if (x > 0)
+        {
+            side = 1;
+            animator.Flip(side);
+        }
+        if (x < 0)
+        {
+            side = -1;
+            animator.Flip(side);
+        }
+
     }
 
     private void Walk(Vector2 dir)

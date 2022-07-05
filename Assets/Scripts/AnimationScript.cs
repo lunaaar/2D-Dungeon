@@ -26,4 +26,10 @@ public class AnimationScript : MonoBehaviour
         animator.SetBool("isRolling", playerMove.isRolling);
         animator.SetBool("isBlocking", playerMove.isBlocking);
     }
+
+    public void Flip(int side)
+    {
+        bool state = (side == 1) ? false : true;
+        spriteRenderer.flipX = state;
+    }
 }
