@@ -43,18 +43,10 @@ public class PlayerMovement : MonoBehaviour
 
         Walk(direction);
 
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            rigidBody.velocity *= 100;
-            Debug.Log(rigidBody.velocity);
-        }
-
-
         if (Input.GetButtonDown("Jump") && !hasRolled)
         {
             if (xRaw != 0 || yRaw != 0)
             {
-                Debug.Log("TEST2");
                 Roll(xRaw, yRaw);
             }
         }
@@ -87,24 +79,24 @@ public class PlayerMovement : MonoBehaviour
 
         rigidBody.velocity += dash.normalized * rollSpeed;
 
-        Debug.Log(rigidBody.velocity);
+        StartCoroutine(RollWait(x,y));
 
-        StartCoroutine(RollWait());
     }
 
-    IEnumerator RollWait()
+    IEnumerator RollWait(float x, float y)
     {
         StartCoroutine(GroundRoll());
         
         isRolling = true;
+        //Duration of the roll
         yield return new WaitForSeconds(.3f);
-
         spriteRenderer.color = new Color(255, 255, 255);
         isRolling = false;
     }
 
     IEnumerator GroundRoll()
     {
+        //Works as the cooldown for when you can dash next.
         yield return new WaitForSeconds(.15f);
         hasRolled = false;
     }
