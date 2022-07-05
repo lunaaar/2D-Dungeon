@@ -34,31 +34,36 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
-    }
-
-    void FixedUpdate()
-    {
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
         float xRaw = Input.GetAxisRaw("Horizontal");
         float yRaw = Input.GetAxisRaw("Vertical");
 
-        Vector2 direction = new Vector2(x, y);
+        Vector2 direction = new Vector2(xRaw, yRaw);
 
         Walk(direction);
 
-        Debug.Log(rigidBody.velocity);
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            rigidBody.velocity *= 100;
+            Debug.Log(rigidBody.velocity);
+        }
+
 
         if (Input.GetButtonDown("Jump") && !hasRolled)
         {
-            if (x != 0 || y != 0) Roll(xRaw, yRaw);
+            if (xRaw != 0 || yRaw != 0)
+            {
+                Debug.Log("TEST2");
+                Roll(xRaw, yRaw);
+            }
         }
     }
 
     private void Walk(Vector2 dir)
     {
         if (!canMove) return;
+        if (isRolling) return;
 
         if (isBlocking)
         {
@@ -81,6 +86,8 @@ public class PlayerMovement : MonoBehaviour
         Vector2 dash = new Vector2(x, y);
 
         rigidBody.velocity += dash.normalized * rollSpeed;
+
+        Debug.Log(rigidBody.velocity);
 
         StartCoroutine(RollWait());
     }

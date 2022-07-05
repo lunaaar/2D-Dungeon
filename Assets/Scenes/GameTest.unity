@@ -1022,14 +1022,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerClass: 0
-  speed: 0
-  acceleration: 0
-  decceleration: 0
-  jumpGravity: 0
-  fallGravity: 0
-  isRolling: 0
-  isBlocking: 0
-  isInvisible: 0
 --- !u!1001 &819413587
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1159,7 +1151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rigidBody: {fileID: 0}
   speed: 5
-  rollSpeed: 20
+  rollSpeed: 10
   canMove: 0
   isRolling: 0
   isBlocking: 0
