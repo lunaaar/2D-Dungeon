@@ -12,7 +12,7 @@ public class PlayerMovement : MonoBehaviour
     [Space]
     [Header("Movement Stats")]
     public float speed = 5;
-    public float rollSpeed = 20;
+    public float rollSpeed = 10;
 
     [Space]
     [Header("Booleans")]
@@ -33,9 +33,13 @@ public class PlayerMovement : MonoBehaviour
     {
         StartCoroutine(DisableMovement(.01f));
 
-        rigidBody = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        animator = GetComponent<AnimationScript>();
+        //rigidBody = GetComponent<Rigidbody2D>();
+        //spriteRenderer = GetComponent<SpriteRenderer>();
+        //animator = GetComponent<AnimationScript>();
+
+        rigidBody = GetComponentInChildren<Rigidbody2D>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        animator = GetComponentInChildren<AnimationScript>();
     }
 
     // Update is called once per frame
