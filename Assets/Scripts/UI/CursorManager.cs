@@ -36,12 +36,10 @@ public class CursorManager : MonoBehaviour
     private Texture2D sprite2Texture(Sprite currentSprite)
     {
         var croppedTexture = new Texture2D((int)currentSprite.rect.width, (int)currentSprite.rect.height);
-        Debug.Log($"{currentSprite.rect.width} {currentSprite.rect.height}");
         var pixels = currentSprite.texture.GetPixels((int)currentSprite.textureRect.x,
                                                 (int)currentSprite.textureRect.y,
                                                 (int)currentSprite.textureRect.width,
                                                 (int)currentSprite.textureRect.height);
-        Debug.Log($"{pixels.Length}");
         croppedTexture.SetPixels(pixels);
         croppedTexture.Apply();
         return croppedTexture;
