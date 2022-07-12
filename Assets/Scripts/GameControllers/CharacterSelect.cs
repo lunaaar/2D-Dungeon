@@ -44,7 +44,7 @@ public class CharacterSelect : MonoBehaviour
             image = selectedCharacter.GetComponent<Image>();
             anim = selectedCharacter.GetComponent<Animator>();
 
-            if (Input.GetKey(KeyCode.RightArrow))
+            if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
             {
                 
                 image.color = new Color32(90, 90, 90, 255);
@@ -70,7 +70,7 @@ public class CharacterSelect : MonoBehaviour
             }
 
 
-            if (Input.GetKey(KeyCode.LeftArrow))
+            if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
             {
                 image.color = new Color32(90, 90, 90, 255);
                 anim.Play("Non Hover Menu");
@@ -94,7 +94,7 @@ public class CharacterSelect : MonoBehaviour
             }
 
 
-            if (Input.GetKey(KeyCode.DownArrow))
+            if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
             {
                 image.color = new Color32(90, 90, 90, 255);
                 anim.Play("Non Hover Menu");
@@ -115,7 +115,7 @@ public class CharacterSelect : MonoBehaviour
                 currentTime = Time.time + coolDownInSeconds;
             }
 
-            if (Input.GetKey(KeyCode.UpArrow))
+            if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
             {
                 image.color = new Color32(90, 90, 90, 255);
                 anim.Play("Non Hover Menu");
