@@ -5,9 +5,14 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [HideInInspector]
+    public AnimationScript animator;
+    public SpriteRenderer spriteRenderer;
     public Rigidbody2D rigidBody;
-    private SpriteRenderer spriteRenderer;
-    private AnimationScript animator;
+
+    public ContactFilter2D movementFilter;
+    //Sets stuff for  what layers to ignore
+    private List<RaycastHit2D> castCollisions = new List<RaycastHit2D>();
+    public float magicnumber = 8;
 
     [Space]
     [Header("Movement Stats")]
@@ -32,10 +37,9 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         StartCoroutine(DisableMovement(.01f));
-
-        // rigidBody = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer = transform.GetChild(0).GetComponent<SpriteRenderer>();
         animator = GetComponent<AnimationScript>();
+        rigidBody = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -48,26 +52,48 @@ public class PlayerMovement : MonoBehaviour
 
         Vector2 direction = new Vector2(xRaw, yRaw);
 
-        Walk(direction);
+        bool moveable = MovePlayer(direction, speed * Time.deltaTime * magicnumber);
+        if (moveable)
+        {
+            Walk(direction);
+
+        } else if(MovePlayer(new Vector2(direction.x, 0), speed * Time.deltaTime * magicnumber))
+        {
+            Walk(new Vector2(direction.x, 0));
+            
+        } else if(MovePlayer(new Vector2(0, direction.y), speed * Time.deltaTime * magicnumber))
+        {
+            Walk(new Vector2(0, direction.y));
+        
+        } else
+        {
+            Walk(Vector2.zero);
+        }
 
         if (Input.GetButtonDown("Jump") && !hasRolled)
         {
             if (xRaw != 0 || yRaw != 0)
             {
-                Roll(xRaw, yRaw);
+
+                if (MovePlayer(new Vector2(xRaw, yRaw), rollSpeed * Time.deltaTime * magicnumber))
+                {
+                    Roll(xRaw, yRaw);
+
+                }
+                else if (MovePlayer(new Vector2(xRaw, 0), speed * Time.deltaTime * magicnumber))
+                {
+                    Roll(xRaw, 0);
+
+                }
+                else if (MovePlayer(new Vector2(0, yRaw), speed * Time.deltaTime * magicnumber))
+                {
+                    Roll(0, yRaw);
+
+                }
+
             }
         }
 
-        if (x > 0)
-        {
-            side = 1;
-            animator.Flip(side);
-        }
-        if (x < 0)
-        {
-            side = -1;
-            animator.Flip(side);
-        }
 
     }
 
@@ -91,24 +117,43 @@ public class PlayerMovement : MonoBehaviour
     {
         hasRolled = true;
 
-        spriteRenderer.color = new Color(255, 0, 0);
+        spriteRenderer.color = new Color(0, 255, 0);
 
         rigidBody.velocity = Vector2.zero;
         Vector2 dash = new Vector2(x, y);
 
         rigidBody.velocity += dash.normalized * rollSpeed;
 
-        StartCoroutine(RollWait(x, y));
+        StartCoroutine(RollWait(dash));
 
     }
 
-    IEnumerator RollWait(float x, float y)
+    //Sorta from https://www.youtube.com/watch?v=05eWA0TP3AA
+    public bool MovePlayer(Vector2 direction, float playerSpeed)
+    {
+        var result = new RaycastHit2D[10];
+        int count = rigidBody.Cast(direction, movementFilter, result, playerSpeed);
+        if (count == 0)
+        {
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
+
+    IEnumerator RollWait(Vector2 dash)
     {
         StartCoroutine(GroundRoll());
 
         isRolling = true;
         //Duration of the roll
-        yield return new WaitForSeconds(.3f);
+        for (float i = 0f; i < .3f; i += Time.fixedDeltaTime)
+        {
+            if (!MovePlayer(dash, rollSpeed * Time.deltaTime))
+                break;
+            yield return new WaitForFixedUpdate();
+        }
         spriteRenderer.color = new Color(255, 255, 255);
         isRolling = false;
     }

@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 4920082481050253494}
   - component: {fileID: 6685785582282010963}
   - component: {fileID: 955232741618890952}
-  - component: {fileID: 838135958648918648}
   - component: {fileID: 4096383562644253326}
+  - component: {fileID: 8885025001534381419}
   m_Layer: 0
   m_Name: Lizard Male
   m_TagString: Untagged
@@ -104,7 +104,23 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!50 &838135958648918648
+--- !u!70 &4096383562644253326
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2721200641016683702}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.03771901, y: -0.2983215}
+  m_Size: {x: 0.8148351, y: 1.153357}
+  m_Direction: 0
+--- !u!50 &8885025001534381419
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
@@ -113,7 +129,7 @@ Rigidbody2D:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2721200641016683702}
   m_BodyType: 1
-  m_Simulated: 1
+  m_Simulated: 0
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
@@ -125,19 +141,3 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!70 &4096383562644253326
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2721200641016683702}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0.03771901, y: -0.2983215}
-  m_Size: {x: 0.8148351, y: 1.153357}
-  m_Direction: 0
