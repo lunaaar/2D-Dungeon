@@ -7,6 +7,7 @@ public class GameManager : MonoBehaviour
 {
     static int selectedCharacter = 0;
     static int selectedCursor = 3;
+    public GameObject player;
 
 
     // Start is called before the first frame update
@@ -39,6 +40,11 @@ public class GameManager : MonoBehaviour
     public int getSelectedCursor()
     {
         return selectedCursor;
+    }
+
+    public GameObject getPlayer()
+    {
+        return player;
     }
 
     public void gameSwitch()

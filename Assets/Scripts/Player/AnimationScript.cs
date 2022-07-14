@@ -6,14 +6,14 @@ public class AnimationScript : MonoBehaviour
 {
     private Animator animator;
     private PlayerMovement playerMove;
-    private Rigidbody2D rigidbody2D;
+    private Rigidbody2D rigidbody2Dvar;
     private SpriteRenderer spriteRenderer;
 
     public GameObject[] playerPrefab;
     public GameObject gameManager;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         
         
@@ -28,8 +28,7 @@ public class AnimationScript : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
         playerMove = GetComponent<PlayerMovement>();        
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        playerMove.rigidBody = spriteRenderer.gameObject.GetComponent<Rigidbody2D>();
-        rigidbody2D = spriteRenderer.gameObject.GetComponent<Rigidbody2D>();
+        rigidbody2Dvar = spriteRenderer.gameObject.GetComponent<Rigidbody2D>();
 
 
     }
