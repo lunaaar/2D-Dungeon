@@ -2,38 +2,33 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using Graphs;
 
 
 public class MapGenerator : MonoBehaviour
 {
-    enum Type {
-        Nothing,
+    enum CellType
+    {
+        None,
         Room,
         Hallway
     }
 
-
-    class Room
-    {
-        public BoundsInt bounds;
-
-        public Room(BoundsInt b)
-        {
-            bounds = b;
-        }
-    }
-
-
     public int numRooms;
-    //public Grid grid;
 
     public Vector2Int sizeOfGrid;
 
+    Grid2D<CellType> grid;
+
     public List<GameObject> roomPrefabs;
+
+    public GameObject hallwayPrefab;
 
     List<GameObject> rooms;
 
-    public ContactFilter2D contactFilter;
+    DelaunayTriangulation delaunay;
+
+    HashSet<Prim.Edge> selectedEdges;
 
     // THIS GENERATION IS WIP and is based on a form of the Tiny Keep Generation Method
 
@@ -44,15 +39,12 @@ public class MapGenerator : MonoBehaviour
      * 4. Randomly Choose Edges
      * 5. Pathfind Hallways (use A* algorithm on every hallway)
      */
-
+    
     // Start is called before the first frame update
     void Start()
     {
-        //grid = new Grid();
-
         rooms = new List<GameObject>();
 
-        
         placeRooms();
         delaunayTriangulation();
         minimumSpanningTree();
@@ -61,66 +53,161 @@ public class MapGenerator : MonoBehaviour
 
     private void placeRooms()
     {
-        bool goodRoom = true;
-
+        //ADD IN HERE TO PLACE THE STARTING ROOM AND BOSS ROOM SEPARATE
+        
+        
         for (int i = 0; i < numRooms; i++)
         {
-
-            //Randomly pick a room from list of prefabs.
-            GameObject room = roomPrefabs[Random.Range(0, roomPrefabs.Count)];
-            //Establish it as a room object with a random location
-
-            goodRoom = true;
-
             Vector3 center = new Vector3(Random.Range(-sizeOfGrid.x, sizeOfGrid.x), Random.Range(-sizeOfGrid.y, sizeOfGrid.y), 0);
 
-            
+            //Randomly pick a room from list of prefabs.
+            GameObject room = Instantiate(roomPrefabs[Random.Range(0, roomPrefabs.Count)], center, new Quaternion(0, 0, 0, 1), this.transform);
+            //Establish it as a room object with a random location
 
-            Collider2D[] results = new Collider2D[10];
-            
-            
+            BoxCollider2D boxCollider = room.GetComponent<BoxCollider2D>();
 
-            foreach (GameObject r in rooms)
+            if (Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0).Length > 2)
             {
-                Debug.Log("TEST");
-                TilemapCollider2D t = r.transform.Find("Walls").GetComponent<TilemapCollider2D>();
-
-                Debug.Log(t.OverlapCollider(contactFilter, results));
-
-                if(t.OverlapCollider(contactFilter, results) != 0)
-                {
-
-                    Debug.Log("TRY THE PHYSICS BOX YOU BITCH");
-                    
-                    Debug.Log("collide");
-
-                    goodRoom = false;
-                    break;
-                }
+                Destroy(room);
+                i--;
             }
-
-
-            if (goodRoom)
+            else
             {
                 rooms.Add(room);
-                Instantiate(roomPrefabs[Random.Range(0, roomPrefabs.Count)], center, new Quaternion(0, 0, 0, 1), this.transform);
-            }
 
-            
-
+                //foreach(var pos in room.GetComponent<BoxCollider2D>().bounds.)
+            } 
         }
+
     }
 
     private void delaunayTriangulation()
     {
+        List<Vertex> vertices = new List<Vertex>();
+
+        foreach(var room in rooms)
+        {
+            vertices.Add(new Vertex<GameObject>((Vector2)room.GetComponent<BoxCollider2D>().bounds.center, room));
+        }
+
+        delaunay = DelaunayTriangulation.Triangulate(vertices);
 
     }
     private void minimumSpanningTree()
     {
+        List<Prim.Edge> edges = new List<Prim.Edge>();
 
+        foreach (var edge in delaunay.Edges)
+        {
+            edges.Add(new Prim.Edge(edge.U, edge.V));
+        }
+
+        List<Prim.Edge> mst = Prim.MinimumSpanningTree(edges, edges[0].U);
+
+        selectedEdges = new HashSet<Prim.Edge>(mst);
+        var remainingEdges = new HashSet<Prim.Edge>(edges);
+        remainingEdges.ExceptWith(selectedEdges);
+
+        foreach (var edge in remainingEdges)
+        {
+            if (Random.value < 0.125)
+            {
+                selectedEdges.Add(edge);
+            }
+        }
     }
-    private void pathfindHallways()
+    void pathfindHallways()
     {
+        DungeonPathfinder2D aStar = new DungeonPathfinder2D(sizeOfGrid);
+
+        foreach(var edge in selectedEdges)
+        {
+            var startRoom = (edge.U as Vertex<GameObject>).Item;
+            var endRoom = (edge.V as Vertex<GameObject>).Item;
+
+            var startPosf = startRoom.GetComponent<BoxCollider2D>().bounds.center;
+            var endPosf = endRoom.GetComponent<BoxCollider2D>().bounds.center;
+            
+            var startPos = new Vector2Int((int)startPosf.x, (int)startPosf.y);
+            var endPos = new Vector2Int((int)endPosf.x, (int)endPosf.y);
+            var path = aStar.FindPath(startPos, endPos, (DungeonPathfinder2D.Node a, DungeonPathfinder2D.Node b) => {
+                var pathCost = new DungeonPathfinder2D.PathCost();
+
+                pathCost.cost = Vector2Int.Distance(b.Position, endPos);    //heuristic
+
+                if (grid[b.Position] == CellType.Room)
+                {
+                    pathCost.cost += 10;
+                }
+                else if (grid[b.Position] == CellType.None)
+                {
+                    pathCost.cost += 5;
+                }
+                else if (grid[b.Position] == CellType.Hallway)
+                {
+                    pathCost.cost += 1;
+                }
+
+                pathCost.traversable = true;
+
+                return pathCost;
+            });
+
+            if (path != null)
+            {
+                for (int i = 0; i < path.Count; i++)
+                {
+                    var current = path[i];
+
+                    if (grid[current] == CellType.None)
+                    {
+                        grid[current] = CellType.Hallway;
+                    }
+
+                    if (i > 0)
+                    {
+                        var prev = path[i - 1];
+
+                        var delta = current - prev;
+                    }
+                }
+
+                foreach (var pos in path)
+                {
+                    if (grid[pos] == CellType.Hallway)
+                    {
+                        //PlaceHallway(pos);
+
+                        Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                    }
+                }
+            }
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+
+        if(delaunay != null)
+        {
+            foreach (DelaunayTriangulation.Edge v in delaunay.Edges)
+            {
+                Gizmos.DrawLine(v.U.Position, v.V.Position);
+            }
+
+        }
+
+        Gizmos.color = Color.blue;
+
+        if (selectedEdges != null)
+        {
+            foreach (Prim.Edge v in selectedEdges)
+            {
+                Gizmos.DrawLine(v.U.Position, v.V.Position);
+            }
+
+        }
 
     }
 }

@@ -6,15 +6,37 @@ using UnityEngine.Tilemaps;
 public class Test : MonoBehaviour
 {
     public List<GameObject> prefabTests;
-    
+
+    public RaycastHit2D[] results = new RaycastHit2D[10];
+
 
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            GameObject t2 = Instantiate(prefabTests[1], this.transform.position, new Quaternion(0, 0, 0, 1), this.transform);
+            Debug.Log(t2.transform.Find("Walls").GetComponent<TilemapCollider2D>().bounds);
+        }
+        
+        
         if (Input.GetKeyDown(KeyCode.Q))
         {
             GameObject t3 = Instantiate(prefabTests[2], this.transform.position, new Quaternion(0, 0, 0, 1), this.transform);
-            GameObject t2 = Instantiate(prefabTests[1], this.transform.position, new Quaternion(0, 0, 0, 1), this.transform);
+
+            BoxCollider2D test = t3.GetComponent<BoxCollider2D>();
+
+            Debug.Log(test.bounds);
+
+            //Physics2D.OverlapBox(test.bounds.center, test.bounds.size, 0);
+
+            if(Physics2D.OverlapBox(test.bounds.center, test.bounds.size, 0) != null)
+            {
+                Debug.Log("TEST");
+            }
+
+
+            /**
 
             TilemapCollider2D test = t3.transform.Find("Walls").GetComponent<TilemapCollider2D>();
 
@@ -30,6 +52,8 @@ public class Test : MonoBehaviour
             {
                 Debug.Log("TEST2");
             }
+
+            */
 
         }
         
