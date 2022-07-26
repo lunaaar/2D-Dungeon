@@ -44,6 +44,7 @@ public class MapGenerator : MonoBehaviour
     void Start()
     {
         rooms = new List<GameObject>();
+        grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
 
         placeRooms();
         delaunayTriangulation();
@@ -74,6 +75,16 @@ public class MapGenerator : MonoBehaviour
             else
             {
                 rooms.Add(room);
+
+                Tilemap tilemap = room.GetComponentInChildren<Tilemap>();
+
+                foreach(var point in tilemap.cellBounds.allPositionsWithin)
+                {
+                    //Debug.Log(point.ToString());
+                    grid[(Vector2Int)point] = CellType.Room;
+
+                    //grid[new Vector2Int((int)tilemap.CellToWorld(point).x, (int)tilemap.CellToWorld(point).y)] = CellType.Room;
+                }
 
                 //foreach(var pos in room.GetComponent<BoxCollider2D>().bounds.)
             } 
