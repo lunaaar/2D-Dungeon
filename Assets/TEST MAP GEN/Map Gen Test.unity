@@ -393,8 +393,11 @@ MonoBehaviour:
   - {fileID: 2953580139114670693, guid: efeee9e9c9c7eee43ad584e7ad176b9d, type: 3}
   - {fileID: 8004062099226606207, guid: 243cfd64e0a071b4ea90014c42a3bb23, type: 3}
   - {fileID: 7780707124605638757, guid: 398d7720768261548993df54d0925600, type: 3}
-  hallwayPrefab: {fileID: 11400000, guid: 2e79b26954b0c4141bcbdd0a085759f2, type: 2}
+  hallwayPrefab: {fileID: 9211420905664892318, guid: f67e698b2b6a7e54780e47bb017baf16, type: 3}
   roomPrefab: {fileID: 9211420905664892318, guid: b19d9e9d69e2c5d47bd4e99f41a41362, type: 3}
+  tilemap: {fileID: 1963059399}
+  tile: {fileID: 11400000, guid: 2e79b26954b0c4141bcbdd0a085759f2, type: 2}
+  floorTile: {fileID: 0}
 --- !u!4 &1963059396
 Transform:
   m_ObjectHideFlags: 0
