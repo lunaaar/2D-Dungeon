@@ -10,20 +10,34 @@ public class TEST2 : MonoBehaviour
     {
 
         Tilemap tilemap = this.GetComponent<Tilemap>();
-        Debug.Log(tilemap.cellBounds);
-        Debug.Log("-------");
+        
+        //Debug.Log(tilemap.cellBounds);
+        // Debug.Log("-------");
 
-        foreach (var point in tilemap.cellBounds.allPositionsWithin)
+        foreach (Vector3Int point in tilemap.cellBounds.allPositionsWithin)
         {
-            Debug.Log(point.ToString());
-            Debug.Log(tilemap.CellToWorld(point));
-            Debug.Log("-------");
+            if (tilemap.HasTile(point))
+            {
+                //Debug.Log("TEST");
+                Debug.Log(tilemap.CellToWorld(point));
+                tilemap.SetTileFlags(point, TileFlags.None);
+                tilemap.SetColor(point, Color.blue);
+            }
         }
+
+        //tilemap.RefreshAllTiles();
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Log("TEST");
+            Tilemap tilemap = this.GetComponent<Tilemap>();
+            Vector3Int point = new Vector3Int(1, 1, 0);
+            tilemap.SetTileFlags(point, TileFlags.None);
+            tilemap.SetColor(point, Color.green);
+        }
     }
 }

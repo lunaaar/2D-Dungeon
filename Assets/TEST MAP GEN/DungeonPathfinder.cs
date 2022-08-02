@@ -76,6 +76,8 @@ public class DungeonPathfinder2D
         queue = new SimplePriorityQueue<Node, float>();
         closed = new HashSet<Node>();
 
+
+        //RIGHT HERE
         grid[start].Cost = 0;
         queue.Enqueue(grid[start], 0);
 

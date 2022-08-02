@@ -44,6 +44,7 @@ public class Grid2D<T>
         get
         {
             pos += Offset;
+            //OUT OF BOUNDS HERE.
             return data[GetIndex(pos)];
         }
         set
