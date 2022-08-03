@@ -238,22 +238,18 @@ public class MapGenerator : MonoBehaviour
                             if((direction == new Vector2Int(0, 1) || direction == new Vector2Int(0, -1)) && grid[nextPos] == CellType.Hallway)
                             {
                                 wallTilemap.SetTile((Vector3Int)pos, wallTile);
-                                wallTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), wallTile);
-                                wallTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), wallTile);
-
                                 floorTilemap.SetTile((Vector3Int)pos, floorTile);
-                                floorTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), floorTile);
-                                floorTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), floorTile);
+                                if (grid[pos.x + 1, pos.y] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), wallTile); floorTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), floorTile);
+                                if (grid[pos.x - 1, pos.y] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), wallTile); floorTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), floorTile);
                             }
 
                             if((direction == new Vector2Int(1,0) || direction == new Vector2Int(-1, 0)) && grid[nextPos] == CellType.Hallway)
                             {
                                 wallTilemap.SetTile((Vector3Int)pos, wallTile);
-                                wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 1, 0), wallTile);
-                                wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 2, 0), wallTile);
-                                wallTilemap.SetTile(new Vector3Int(pos.x, pos.y - 1, 0), wallTile);
-
                                 floorTilemap.SetTile((Vector3Int)pos, floorTile);
+                                if(grid[pos.x, pos.y + 1] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 1, 0), wallTile);
+                                if (grid[pos.x, pos.y + 2] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 2, 0), wallTile);
+                                if (grid[pos.x, pos.y - 1] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y - 1, 0), wallTile);
                             }
                         }
                         else
