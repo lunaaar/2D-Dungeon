@@ -138,7 +138,20 @@ public class PlayerMovement : MonoBehaviour
             return true;
         } else
         {
-            return false;
+            foreach (var i in result)
+            {
+                if (i.transform != null)
+                {
+
+                    if (i.transform.gameObject.tag == "Wall")
+                    {
+
+                        return false;
+                    }
+                
+                }
+            }
+            return true;
         }
     }
 

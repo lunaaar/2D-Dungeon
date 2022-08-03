@@ -15,7 +15,7 @@ public class PlayerWeaponTest : MonoBehaviour
     {
         GameObject addedWeapon = Instantiate(weapon);
 
-        addedWeapon.transform.position = Vector2.zero;
+        addedWeapon.transform.position = this.transform.position;
         addedWeapon.transform.parent = transform.GetChild(0).transform;
         weaponObj = transform.GetChild(0).GetChild(0);
         animator = weaponObj.GetComponent<Animator>();
@@ -42,7 +42,7 @@ public class PlayerWeaponTest : MonoBehaviour
                 helperObj.localScale = new Vector3(-1, 1, 1);
             }
         }
-        //Gets where the mouse is. If its >90 or <-90 than the mouse is on the right side and 
+        //Gets where the mouse is. If its >90 or <-90 than the mouse is on the right side
         var mouseAngle = Mathf.Atan2(Camera.main.ScreenToWorldPoint(Input.mousePosition).y - transform.position.y, Camera.main.ScreenToWorldPoint(Input.mousePosition).x - transform.position.x) * (180/Mathf.PI);
         if(mouseAngle > 90 || mouseAngle < -90)
         {

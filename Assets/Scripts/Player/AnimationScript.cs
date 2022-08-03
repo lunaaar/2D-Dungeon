@@ -21,8 +21,8 @@ public class AnimationScript : MonoBehaviour
         GameObject selectedPrefab = Instantiate(playerPrefab[gameManager.GetComponent<GameManager>().getSelectedCharacter()]);
         
         //Sets starting position of the player
-        selectedPrefab.transform.position = Vector2.zero;
         selectedPrefab.transform.parent = this.transform;
+        selectedPrefab.transform.position = this.transform.position;
 
 
         animator = GetComponentInChildren<Animator>();

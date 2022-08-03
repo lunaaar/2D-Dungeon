@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     static int selectedCharacter = 0;
     static int selectedCursor = 3;
     public GameObject player;
+    public bool gameOver;
 
 
     // Start is called before the first frame update
