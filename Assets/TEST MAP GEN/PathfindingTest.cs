@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Pathfinding
+public class PathfindingTest
 {
     private const int move_straight = 10;
     private const int move_diagonal = 20;
@@ -12,7 +12,7 @@ public class Pathfinding
     private List<PathNode> openList;
     private List<PathNode> closedList;
 
-    public Pathfinding(int width, int height)
+    public PathfindingTest(int width, int height)
     {
         grid = new Grid<PathNode>(width, height, 1);
     }

@@ -229,7 +229,7 @@ public class MapGenerator : MonoBehaviour
 
 
 
-                        if((path.IndexOf(pos) + 1) < path.Count)
+                        /*if((path.IndexOf(pos) + 1) < path.Count)
                         {
                             var nextPos = path[path.IndexOf(pos) + 1];
 
@@ -256,7 +256,7 @@ public class MapGenerator : MonoBehaviour
                         {
                             //wallTilemap.SetTile((Vector3Int)pos, wallTile);
                             //floorTilemap.SetTile((Vector3Int)pos, floorTile);
-                        }
+                        }*/
 
 
                         
@@ -271,7 +271,7 @@ public class MapGenerator : MonoBehaviour
                         
                         
 
-                        //Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                        Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
                     }
                 }
             }
