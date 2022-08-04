@@ -213,6 +213,10 @@ public class EnemyAI : MonoBehaviour
                     GetComponentInChildren<SpriteRenderer>().flipX = false;
                     //Debug.Log("The sprite is facing to the right");
                 }
+                if(player == null)
+                {
+                    break;
+                }
                 bool lookingAt = (direction >= 0 && player.transform.position.x - transform.position.x >= 0) || (direction <= 0 && player.transform.position.x - transform.position.x <= 0);
 
                 if ((Vector3.Distance(transform.position, player.transform.position) > 15f || hit.collider.gameObject.tag != "Player") && !toLastKnown)
@@ -231,13 +235,36 @@ public class EnemyAI : MonoBehaviour
                 break;
 
             case ATTACK:
-                //Plays attack animation
-                if(attackTime >= .5f / GetComponent<EnemyStats>().attackSpeed)
+                //Todo: If the enemy is not looking at the player, flip the sprite and reset attacktime
+
+                direction = 1;
+                if (GetComponentInChildren<SpriteRenderer>().flipX)
                 {
-                    //Debug.Log("Attack Triggered     AttackTime = " + attackTime + "         Attack Time = " + (.5f / GetComponent<EnemyStats>().attackSpeed));
-                    GetComponent<EnemyWeaponScript>().attack(player.transform.position);
+                    GetComponentInChildren<SpriteRenderer>().flipX = true;
+                    direction = -1;
+                    //Debug.Log("The sprite is facing to the left");
+                }
+                else
+                {
+                    GetComponentInChildren<SpriteRenderer>().flipX = false;
+                    //Debug.Log("The sprite is facing to the right");
+                }
+                lookingAt = (direction >= 0 && player.transform.position.x - transform.position.x >= 0) || (direction <= 0 && player.transform.position.x - transform.position.x <= 0);
+                if (lookingAt)
+                {
+                    //Plays attack animation
+                    if (attackTime >= .5f / GetComponent<EnemyStats>().attackSpeed)
+                    {
+                        //Debug.Log("Attack Triggered     AttackTime = " + attackTime + "         Attack Time = " + (.5f / GetComponent<EnemyStats>().attackSpeed));
+                        GetComponent<EnemyWeaponScript>().attack(player.transform.position);
+                        attackTime = 0f;
+                    }
+                } else
+                {
+                    GetComponentInChildren<SpriteRenderer>().flipX = !GetComponentInChildren<SpriteRenderer>().flipX;
                     attackTime = 0f;
                 }
+                
                 attackTime += Time.deltaTime;
                 break;
 
