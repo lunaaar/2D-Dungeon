@@ -498,9 +498,9 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 7482667652216324306, guid: 48e93eef0688c4a259cb0eddcd8661f7, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.19607843}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.043137256}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -518,8 +518,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1488133383}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 40, y: 40, z: 0}
-  m_LocalScale: {x: 80, y: 80, z: 1}
+  m_LocalPosition: {x: 30, y: 30, z: 0}
+  m_LocalScale: {x: 60, y: 60, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 3
@@ -620,17 +620,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5b1c60ed17e6af4091dca5c53d5289a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numRooms: 5
-  sizeOfGrid: {x: 80, y: 80}
+  numRooms: 4
+  sizeOfGrid: {x: 60, y: 60}
   roomPrefabs:
-  - {fileID: 132252122840184853, guid: 870e2b3be07df7044886a03f01bdc9dc, type: 3}
-  - {fileID: 2953580139114670693, guid: efeee9e9c9c7eee43ad584e7ad176b9d, type: 3}
-  - {fileID: 8004062099226606207, guid: 243cfd64e0a071b4ea90014c42a3bb23, type: 3}
-  - {fileID: 7780707124605638757, guid: 398d7720768261548993df54d0925600, type: 3}
+  - {fileID: 4172542786670916840, guid: fc81d76e18c086246bc844ec2ee82f32, type: 3}
+  - {fileID: 4172542786670916840, guid: 07f51c5b8d3d83348b69a951647ec791, type: 3}
+  - {fileID: 4172542786670916840, guid: d3421a4a57edf4d4482318366f9e65cc, type: 3}
   hallwayPrefab: {fileID: 9211420905664892318, guid: f67e698b2b6a7e54780e47bb017baf16, type: 3}
   roomPrefab: {fileID: 9211420905664892318, guid: b19d9e9d69e2c5d47bd4e99f41a41362, type: 3}
   wallTilemap: {fileID: 802764443}
-  wallTile: {fileID: 11400000, guid: 2e79b26954b0c4141bcbdd0a085759f2, type: 2}
+  wallTile: {fileID: 11400000, guid: 5af3a335c6b88af4592ea08000d50162, type: 2}
   floorTilemap: {fileID: 285552567}
   floorTile: {fileID: 11400000, guid: d8a9f9185eb63644e8bd37d985cb14ab, type: 2}
 --- !u!4 &1963059396

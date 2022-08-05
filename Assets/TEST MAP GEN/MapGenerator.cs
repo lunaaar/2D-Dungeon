@@ -109,7 +109,7 @@ public class MapGenerator : MonoBehaviour
                     
                 }*/
 
-                Tilemap floorTilemap = room.transform.Find("Floor").GetComponent<Tilemap>();
+                Tilemap floorTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
 
                 foreach(Vector3Int point in floorTilemap.cellBounds.allPositionsWithin)
                 {
@@ -117,6 +117,9 @@ public class MapGenerator : MonoBehaviour
                     {
                         Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
                         grid[pos] = CellType.Room;
+
+                        //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+
                     }
                 }
             } 
@@ -159,6 +162,7 @@ public class MapGenerator : MonoBehaviour
             }
         }
     }
+
     void pathfindHallways()
     {
         DungeonPathfinder2D aStar = new DungeonPathfinder2D(sizeOfGrid);
@@ -168,9 +172,14 @@ public class MapGenerator : MonoBehaviour
             var startRoom = (edge.U as Vertex<GameObject>).Item;
             var endRoom = (edge.V as Vertex<GameObject>).Item;
 
-            var startPosf = startRoom.GetComponent<BoxCollider2D>().bounds.center;
-            var endPosf = endRoom.GetComponent<BoxCollider2D>().bounds.center;
-            
+            //var startPosf = startRoom.GetComponent<BoxCollider2D>().bounds.center;
+
+            var startPosf = startRoom.transform.Find("Entrance").position;
+
+            //var endPosf = endRoom.GetComponent<BoxCollider2D>().bounds.center;
+
+            var endPosf = endRoom.transform.Find("Entrance").position;
+
             var startPos = new Vector2Int((int)startPosf.x, (int)startPosf.y);
             var endPos = new Vector2Int((int)endPosf.x, (int)endPosf.y);
             
@@ -183,7 +192,7 @@ public class MapGenerator : MonoBehaviour
 
                 if (grid[b.Position] == CellType.Room)
                 {
-                    pathCost.cost += 10;
+                    pathCost.cost += 1000;
                 }
                 else if (grid[b.Position] == CellType.None)
                 {
@@ -228,6 +237,61 @@ public class MapGenerator : MonoBehaviour
                         //place additional hallway tiles in perpindicular direction
 
 
+                        if((path.IndexOf(pos) + 1) < path.Count)
+                        {
+                            var nextPos = path[path.IndexOf(pos) + 1];
+
+                            var direction = nextPos - pos;
+
+                            //If the hallways direction is left or right, and the next position is still part of the hallway
+                            if((direction == Vector2.left || direction == Vector2.right) && grid[nextPos] == CellType.Hallway)
+                            {
+                                wallTilemap.SetTile((Vector3Int)pos, wallTile);
+                                floorTilemap.SetTile((Vector3Int)pos, floorTile);
+                                if(grid[pos + Vector2Int.up] == CellType.None)
+                                {
+                                    wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up), wallTile);
+
+                                    if(grid[pos + Vector2Int.up + Vector2Int.up] == CellType.None){
+                                        wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up), wallTile);
+                                    }
+                                }
+
+                                if (grid[pos + Vector2Int.down] == CellType.None)
+                                {
+                                    wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.down), wallTile);
+                                }
+
+                                //if(grid[pos.x+1, pos.y] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), wallTile); floorTilemap.SetTile(new Vector3Int(pos.x + 1, pos.y, 0), floorTile);
+                                //if (grid[pos.x - 1, pos.y] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), wallTile); floorTilemap.SetTile(new Vector3Int(pos.x - 1, pos.y, 0), floorTile);
+                            }
+
+                            if((direction == Vector2.up || direction == Vector2.down) && grid[nextPos] == CellType.Hallway)
+                            {
+                                wallTilemap.SetTile((Vector3Int)pos, wallTile);
+                                floorTilemap.SetTile((Vector3Int)pos, floorTile);
+
+                                if (grid[pos + Vector2Int.left] == CellType.None)
+                                {
+                                    wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), wallTile);
+                                }
+
+                                if (grid[pos + Vector2Int.right] == CellType.None)
+                                {
+                                    wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), wallTile);
+                                }
+
+                                //if(grid[pos.x, pos.y + 1] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 1, 0), wallTile);
+                                //    if (grid[pos.x, pos.y + 2] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y + 2, 0), wallTile);
+                                //if (grid[pos.x, pos.y - 1] != CellType.Room) wallTilemap.SetTile(new Vector3Int(pos.x, pos.y - 1, 0), wallTile);
+                            }
+                        }
+                        else
+                        {
+                            wallTilemap.SetTile((Vector3Int)pos, wallTile);
+                            floorTilemap.SetTile((Vector3Int)pos, floorTile);
+                        }
+
 
                         /*if((path.IndexOf(pos) + 1) < path.Count)
                         {
@@ -259,19 +323,19 @@ public class MapGenerator : MonoBehaviour
                         }*/
 
 
-                        
 
 
 
 
 
-                        
+
+
                         //PlaceHallway(pos);
                         //if(grid[pos])
-                        
-                        
 
-                        Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+
+
+                        //Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
                     }
                 }
             }
