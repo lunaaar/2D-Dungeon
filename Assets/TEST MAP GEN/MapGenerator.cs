@@ -165,6 +165,14 @@ public class MapGenerator : MonoBehaviour
 
                 pathCost.cost = Vector2Int.Distance(b.Position, endPos);    //heuristic
 
+                if(a.Previous != null)
+                {
+                    if ((b.Position.x - a.Previous.Position.x == 1 || b.Position.x - a.Previous.Position.x == -1)
+                        && (b.Position.y - a.Previous.Position.y == 1 || b.Position.y - a.Previous.Position.y == -1)){
+                        pathCost.cost += 10;
+                    }
+                }
+
                 if (grid[b.Position] == CellType.Room)
                 {
                     pathCost.cost += 1000;
@@ -206,12 +214,15 @@ public class MapGenerator : MonoBehaviour
                 {
                     if (grid[pos] == CellType.Hallway)
                     {
+                        Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+
+
                         //get new position in path with path.FindIndex(pos) + 1, handle end of list problem probably.
 
                         //somehow check the direction related to the two positions to note direction inteded for the path.
                         //place additional hallway tiles in perpindicular direction
-                        
-                        if ((path.IndexOf(pos)) < path.Count - 1 && path.IndexOf(pos) > 0)
+
+                        /*if ((path.IndexOf(pos)) < path.Count - 1 && path.IndexOf(pos) > 0)
                         {
                             //Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
 
@@ -420,6 +431,24 @@ public class MapGenerator : MonoBehaviour
 
         }
 
+    }
+
+
+    public void generateDungeon()
+    {
+        rooms = new List<GameObject>();
+        grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
+
+        placeRooms();
+        delaunayTriangulation();
+        minimumSpanningTree();
+        pathfindHallways();
+    }
+
+    public void test()
+    {
+        rooms = null;
+        grid = null;
     }
 }
 
