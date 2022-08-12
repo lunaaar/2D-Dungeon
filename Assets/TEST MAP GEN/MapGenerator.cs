@@ -214,8 +214,8 @@ public class MapGenerator : MonoBehaviour
                 {
                     if (grid[pos] == CellType.Hallway)
                     {
-                        Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
-
+                        //Instantiate(hallwayPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                        floorTilemap.SetTile((Vector3Int)pos, floorTile);
 
                         //get new position in path with path.FindIndex(pos) + 1, handle end of list problem probably.
 
@@ -436,19 +436,22 @@ public class MapGenerator : MonoBehaviour
 
     public void generateDungeon()
     {
-        rooms = new List<GameObject>();
+        if (rooms != null)
+        {
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                Destroy(rooms[i].gameObject);
+            }
+            rooms.Clear();
+        }
         grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
+        floorTilemap.ClearAllTiles();
+        wallTilemap.ClearAllTiles();
 
         placeRooms();
         delaunayTriangulation();
         minimumSpanningTree();
         pathfindHallways();
-    }
-
-    public void test()
-    {
-        rooms = null;
-        grid = null;
     }
 }
 

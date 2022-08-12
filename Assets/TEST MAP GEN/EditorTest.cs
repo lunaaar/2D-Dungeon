@@ -14,10 +14,5 @@ public class EditorTest : Editor
         {
             mapGen.generateDungeon();
         }
-
-        if (GUILayout.Button("TEST"))
-        {
-            mapGen.test();
-        }
     }
 }
