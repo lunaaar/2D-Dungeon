@@ -63,11 +63,9 @@ public class MapGenerator : MonoBehaviour
         pathfindHallways();
     }
 
-    private void placeRooms()
+
+    private bool _placeRooms()
     {
-        //ADD IN HERE TO PLACE THE STARTING ROOM AND BOSS ROOM SEPARATE
-        
-        
         for (int i = 0; i < numRooms; i++)
         {
             Vector3 center = new Vector3(Random.Range(10, sizeOfGrid.x - 10), Random.Range(10, sizeOfGrid.y - 10), 0);
@@ -89,20 +87,31 @@ public class MapGenerator : MonoBehaviour
 
                 Tilemap wallTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
 
-                foreach(Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
+                foreach (Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
                 {
                     if (wallTilemap.HasTile(point))
                     {
                         Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
+                        if (!grid.InBounds(pos))
+                            return false;
+
                         grid[pos] = CellType.Room;
-                        if (grid[pos] == CellType.Room) {
+                        if (grid[pos] == CellType.Room)
+                        {
                             //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
                         }
                     }
                 }
-            } 
+            }
         }
+        return true;
+    }
 
+    private void placeRooms()
+    {
+
+        while (!_placeRooms()) ;
+        
     }
 
     private void delaunayTriangulation()
@@ -580,6 +589,27 @@ public class MapGenerator : MonoBehaviour
     }
 
 
+    public void pruneRooms()
+    {
+        var roomsInGraph = new HashSet<GameObject>();
+        foreach (var edge in selectedEdges)
+        {
+            var uRoom = (edge.U as Vertex<GameObject>).Item;
+            var vRoom = (edge.V as Vertex<GameObject>).Item;
+            roomsInGraph.Add(uRoom);
+            roomsInGraph.Add(vRoom);
+        }
+
+        var roomsInScene = GameObject.FindGameObjectsWithTag("Room");
+        foreach (var room in roomsInScene)
+        {
+            if (!roomsInGraph.Contains(room))
+            {
+                Object.Destroy(room);
+            }
+        }
+    }
+
     public void generateDungeon()
     {
         if (rooms != null)
@@ -593,10 +623,17 @@ public class MapGenerator : MonoBehaviour
         grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
         floorTilemap.ClearAllTiles();
         wallTilemap.ClearAllTiles();
+        var objects = GameObject.FindGameObjectsWithTag("HallwayBit");
+        Debug.Log(objects.Length);
+        foreach (var o in objects)
+        {
+            Object.Destroy(o);
+        }
 
         placeRooms();
         delaunayTriangulation();
         minimumSpanningTree();
+        pruneRooms();
         pathfindHallways();
     }
 }

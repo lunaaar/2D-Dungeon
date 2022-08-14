@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8964877833991352727}
   m_Layer: 0
   m_Name: Hallway
-  m_TagString: Untagged
+  m_TagString: HallwayBit
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -50,7 +50,7 @@ Tilemap:
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
-      m_AllTileFlags: 1073741825
+      m_AllTileFlags: 1073741824
   m_AnimatedTiles: {}
   m_TileAssetArray:
   - m_RefCount: 1
