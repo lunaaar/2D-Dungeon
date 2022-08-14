@@ -623,15 +623,16 @@ MonoBehaviour:
   numRooms: 5
   sizeOfGrid: {x: 80, y: 80}
   roomPrefabs:
-  - {fileID: 4172542786670916840, guid: fc81d76e18c086246bc844ec2ee82f32, type: 3}
   - {fileID: 4172542786670916840, guid: 07f51c5b8d3d83348b69a951647ec791, type: 3}
   - {fileID: 4172542786670916840, guid: d3421a4a57edf4d4482318366f9e65cc, type: 3}
   hallwayPrefab: {fileID: 9211420905664892318, guid: f67e698b2b6a7e54780e47bb017baf16, type: 3}
   roomPrefab: {fileID: 9211420905664892318, guid: b19d9e9d69e2c5d47bd4e99f41a41362, type: 3}
+  testPrefab: {fileID: 9211420905664892318, guid: 741282de704df9f46afe56c1c8dad857, type: 3}
   wallTilemap: {fileID: 802764443}
-  wallTile: {fileID: 11400000, guid: 5af3a335c6b88af4592ea08000d50162, type: 2}
+  wallTile: {fileID: 11400000, guid: e2694f04d631fbf40b4d66b3f18dcefc, type: 2}
   floorTilemap: {fileID: 285552567}
   floorTile: {fileID: 11400000, guid: d8a9f9185eb63644e8bd37d985cb14ab, type: 2}
+  rooms: []
 --- !u!4 &1963059396
 Transform:
   m_ObjectHideFlags: 0

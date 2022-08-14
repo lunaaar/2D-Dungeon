@@ -517,8 +517,8 @@ Tilemap:
   - first: {x: 9, y: 7, z: 0}
     second:
       serializedVersion: 2
-      m_TileIndex: 6
-      m_TileSpriteIndex: 3
+      m_TileIndex: 23
+      m_TileSpriteIndex: 4
       m_TileMatrixIndex: 0
       m_TileColorIndex: 0
       m_TileObjectToInstantiateIndex: 65535
@@ -814,7 +814,7 @@ Tilemap:
     m_Data: {fileID: 11400000, guid: 5ae8b14548409fc4fb477298ed4eaa17, type: 2}
   - m_RefCount: 8
     m_Data: {fileID: 11400000, guid: 8665089c5847d334da2b2683e00c9e54, type: 2}
-  - m_RefCount: 6
+  - m_RefCount: 5
     m_Data: {fileID: 11400000, guid: e0958ab1fba84c3488c018a261022b3f, type: 2}
   - m_RefCount: 1
     m_Data: {fileID: 11400000, guid: 607988f6ccb450948ac900a229d525a5, type: 2}
@@ -848,8 +848,8 @@ Tilemap:
     m_Data: {fileID: 11400000, guid: ede03a83f4fd9b7448df4dd42216b6b3, type: 2}
   - m_RefCount: 4
     m_Data: {fileID: 11400000, guid: 2544a8453fde6964bb4c76d68baccd3d, type: 2}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: 11400000, guid: 5c3f87ed92dc4db4d8559bb29bbb4ab3, type: 2}
   - m_RefCount: 2
     m_Data: {fileID: 11400000, guid: 684cf25c039bd784d9bc76713ffec9b0, type: 2}
   m_TileSpriteArray:
@@ -859,10 +859,10 @@ Tilemap:
     m_Data: {fileID: 21300000, guid: 70b14d68395769a46aec5de089e61724, type: 3}
   - m_RefCount: 8
     m_Data: {fileID: 5431296766036467766, guid: 65581c965126b8f49945192c5fb5010b, type: 3}
-  - m_RefCount: 6
+  - m_RefCount: 5
     m_Data: {fileID: 2702172060173518170, guid: 65581c965126b8f49945192c5fb5010b, type: 3}
-  - m_RefCount: 0
-    m_Data: {fileID: 0}
+  - m_RefCount: 1
+    m_Data: {fileID: -5938237713591598068, guid: 65581c965126b8f49945192c5fb5010b, type: 3}
   - m_RefCount: 1
     m_Data: {fileID: -3012082057555788827, guid: 65581c965126b8f49945192c5fb5010b, type: 3}
   - m_RefCount: 15
@@ -1055,9 +1055,11 @@ CompositeCollider2D:
   - m_Collider: {fileID: 1478053775916305673}
     m_ColliderPaths:
     - - X: 100000000
-        Y: 80000000
+        Y: 73750000
+      - X: 96875000
+        Y: 73750000
       - X: 95625000
-        Y: 80000000
+        Y: 72500000
       - X: 95625000
         Y: 63750000
       - X: 90000000
@@ -1137,8 +1139,9 @@ CompositeCollider2D:
   m_CompositePaths:
     m_Paths:
     - - {x: 9.99997, y: 0}
-      - {x: 9.99997, y: 8}
-      - {x: 9.5625, y: 7.9999704}
+      - {x: 9.99997, y: 7.375}
+      - {x: 9.687493, y: 7.374992}
+      - {x: 9.5625, y: 7.249989}
       - {x: 9.56247, y: 6.375}
       - {x: 8.999993, y: 6.3750076}
       - {x: 8.8124895, y: 6.5625}
@@ -1236,7 +1239,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 10, y: 12}
+  m_Size: {x: 14, y: 16}
   m_EdgeRadius: 0
 --- !u!1 &6202160906469997641
 GameObject:
@@ -2334,7 +2337,7 @@ Tilemap:
       - {fileID: 21300000, guid: 6a22fcbd65587a744b5c0af95427f96e, type: 3}
       - {fileID: 21300000, guid: 1d3871af343e2114d925fc0724e0aae6, type: 3}
       - {fileID: 21300000, guid: 68e409444ca5be34ba20419f096a083e, type: 3}
-      m_AnimationSpeed: 3.0000002
+      m_AnimationSpeed: 3
       m_AnimationTimeOffset: 0
       m_IsLooping: 1
   - first: {x: 8, y: 9, z: 0}
