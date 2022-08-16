@@ -11,6 +11,12 @@ TagManager:
   - PlayerAttack
   - EnemyAttack
   - UI
+  - Room
+  - HallwayBit
+  - PlayerSpawn
+  - Exit
+  - MapGenerator
+  - Entrance
   layers:
   - Default
   - TransparentFX

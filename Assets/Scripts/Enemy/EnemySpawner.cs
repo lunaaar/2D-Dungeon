@@ -15,7 +15,10 @@ public class EnemySpawner : MonoBehaviour
     {
         gamemanager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
         //Right now its just some random enemy that gets spawned
-        enemyNumb = Random.Range(0, 16);
+        if(enemyNumb == -1)
+        {
+            enemyNumb = Random.Range(0, 16);
+        }
         GameObject spawnedEnemy = Instantiate(enemy);
         spawnedEnemy.transform.parent = this.transform;
         spawnedEnemy.transform.position = this.transform.position;

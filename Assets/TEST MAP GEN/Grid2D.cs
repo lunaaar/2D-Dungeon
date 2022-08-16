@@ -19,6 +19,7 @@ public class Grid2D<T>
 
     public int GetIndex(Vector2Int pos)
     {
+        pos += Offset;
         return pos.x + (Size.x * pos.y);
     }
 
@@ -43,14 +44,10 @@ public class Grid2D<T>
     {
         get
         {
-            pos += Offset;
-            //OUT OF BOUNDS HERE.
             return data[GetIndex(pos)];
-
         }
         set
         {
-            pos += Offset;
             data[GetIndex(pos)] = value;
         }
     }

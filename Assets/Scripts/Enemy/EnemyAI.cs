@@ -33,7 +33,7 @@ public class EnemyAI : MonoBehaviour
     private bool toLastKnown;
 
     public Vector3 targetPosition;
- 
+    public LayerMask collisionLayer;
     
     
     
@@ -338,6 +338,7 @@ public class EnemyAI : MonoBehaviour
                         GetComponentInChildren<SpriteRenderer>().flipX = false;
                         //Debug.Log("The sprite is facing to the right");
                     }
+                    int failureCounter = 0;
                     while (noTarget)
                     {
                         theta = Mathf.Deg2Rad * Random.Range(-90f, 90f);
@@ -345,9 +346,13 @@ public class EnemyAI : MonoBehaviour
                         unitVector = new Vector3(Mathf.Cos(theta), Mathf.Sin(theta), 0) * direction;
                         targetPosition = unitVector * radius + transform.position;
                         waypoint.transform.position = unitVector * radius + transform.position;
-                        if (Physics2D.Raycast(transform.position, unitVector, radius))
+                        if (Physics2D.Raycast(transform.position, unitVector, radius, collisionLayer))
                         {
                             //Debug.Log("Hit something");
+                            failureCounter += 1;
+                            if (failureCounter > 5)
+                                targetPosition = transform.position;
+                                break;
                         } 
                         else
                         {

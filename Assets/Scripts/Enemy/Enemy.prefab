@@ -89,6 +89,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPosition: {x: 0, y: 0, z: 0}
+  collisionLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!114 &1347877165636045144
 MonoBehaviour:
   m_ObjectHideFlags: 0

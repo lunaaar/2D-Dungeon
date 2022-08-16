@@ -11,7 +11,8 @@ public class MapGenerator : MonoBehaviour
     {
         None,
         Room,
-        Hallway
+        Hallway,
+        Wall
     }
 
     [Header("Size Stuff")]
@@ -20,7 +21,8 @@ public class MapGenerator : MonoBehaviour
     public Vector2Int sizeOfGrid;
 
     Grid2D<CellType> grid;
-
+    GameObject[] hallwayInstances;
+    GameObject[] wallInstances;
     [Header("Rooms")]
     public List<GameObject> roomPrefabs;
 
@@ -28,6 +30,7 @@ public class MapGenerator : MonoBehaviour
     public GameObject hallwayPrefab;
     public GameObject roomPrefab;
     public GameObject testPrefab;
+    public GameObject wallPrefab;
     [Space]
     public Tilemap wallTilemap;
     public RuleTile wallTile;
@@ -50,75 +53,199 @@ public class MapGenerator : MonoBehaviour
      * 4. Randomly Choose Edges
      * 5. Pathfind Hallways (use A* algorithm on every hallway)
      */
-    
+
     // Start is called before the first frame update
     void Start()
     {
         rooms = new List<GameObject>();
         grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
+        hallwayInstances = new GameObject[grid.Size.x * grid.Size.y];
+        wallInstances = new GameObject[grid.Size.x * grid.Size.y];
 
         placeRooms();
         delaunayTriangulation();
         minimumSpanningTree();
+        pruneRooms();
         pathfindHallways();
+        pruneRooms();
+        cleanUp();
+        pruneRooms();
+        cleanUp();
+        cleanUp();
+        cleanUp();
+        GameObject.FindGameObjectWithTag("Player").transform.position = GameObject.FindGameObjectWithTag("PlayerSpawn").transform.position;
     }
 
 
     private bool _placeRooms()
     {
-        for (int i = 0; i < numRooms; i++)
+        for (int i = 0; i < 2; i++)
         {
-            Vector3 center = new Vector3(Random.Range(10, sizeOfGrid.x - 10), Random.Range(10, sizeOfGrid.y - 10), 0);
-
-            //Randomly pick a room from list of prefabs.
-            GameObject room = Instantiate(roomPrefabs[Random.Range(0, roomPrefabs.Count)], center, new Quaternion(0, 0, 0, 1), this.transform);
-            //Establish it as a room object with a random location
-
-            BoxCollider2D boxCollider = room.GetComponent<BoxCollider2D>();
-
-            if (Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0).Length > 2)
+            var success = false;
+            while (!success)
             {
-                Destroy(room);
-                i--;
-            }
-            else
-            {
-                rooms.Add(room);
+                Vector3 center = new Vector3(Random.Range(10, sizeOfGrid.x - 10), Random.Range(10, sizeOfGrid.y - 10), 0);
 
-                Tilemap wallTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
+                //Randomly pick a room from list of prefabs.
+                GameObject room = Instantiate(roomPrefabs[Random.Range(2, roomPrefabs.Count)], center, new Quaternion(0, 0, 0, 1), this.transform);
+                //Establish it as a room object with a random location
 
-                foreach (Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
+                BoxCollider2D boxCollider = room.GetComponent<BoxCollider2D>();
+
+                if (Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0).Length > 2)
                 {
-                    if (wallTilemap.HasTile(point))
-                    {
-                        Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
-                        if (!grid.InBounds(pos))
-                            return false;
+                    Destroy(room);
+                    success = false;
+                }
+                else
+                {
+                    rooms.Add(room);
 
-                        grid[pos] = CellType.Room;
-                        if (grid[pos] == CellType.Room)
+                    Tilemap wallTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
+
+                    foreach (Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
+                    {
+                        if (wallTilemap.HasTile(point))
                         {
-                            //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                            Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
+                            if (!grid.InBounds(pos))
+                                return false;
+
+                            grid[pos] = CellType.Room;
+                            if (grid[pos] == CellType.Room)
+                            {
+                                //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                            }
+                        }
+                    }
+                    success = true;
+                }
+            }
+            
+        }
+        bool spawnSpawned = false;
+        bool exitSpawned = false;
+        while (!spawnSpawned || !exitSpawned)
+        {
+            if (!spawnSpawned)
+            {
+                Vector3 center = new Vector3(Random.Range(10, sizeOfGrid.x - 10), Random.Range(10, sizeOfGrid.y - 10), 0);
+
+                //Randomly pick a room from list of prefabs.
+                GameObject room = Instantiate(roomPrefabs[0], center, new Quaternion(0, 0, 0, 1), this.transform);
+                //Establish it as a room object with a random location
+
+                BoxCollider2D boxCollider = room.GetComponent<BoxCollider2D>();
+
+                if (Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0).Length > 2)
+                {
+                    Destroy(room);
+                }
+                else
+                {
+                    spawnSpawned = true;
+                    rooms.Add(room);
+
+                    Tilemap wallTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
+                    Tilemap floorTilemap = room.transform.Find("Floor").GetComponent<Tilemap>();
+
+                    foreach (Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
+                    {
+                        if (wallTilemap.HasTile(point))
+                        {
+                            Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
+                            if (!grid.InBounds(pos))
+                                return false;
+
+                            grid[pos] = CellType.Room;
+                            if (grid[pos] == CellType.Room)
+                            {
+                                //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                            }
+                        }
+                    }
+
+                    foreach (Vector3Int point in floorTilemap.cellBounds.allPositionsWithin)
+                    {
+                        if (floorTilemap.HasTile(point))
+                        {
+                            Vector2Int pos = new Vector2Int((int)floorTilemap.CellToWorld(point).x, (int)floorTilemap.CellToWorld(point).y);
+                            if (!grid.InBounds(pos))
+                                return false;
+
+                            grid[pos] = CellType.Room;
                         }
                     }
                 }
             }
+
+            if (!exitSpawned)
+            {
+                Vector3 center = new Vector3(Random.Range(10, sizeOfGrid.x - 10), Random.Range(10, sizeOfGrid.y - 10), 0);
+
+                //Randomly pick a room from list of prefabs.
+                GameObject room = Instantiate(roomPrefabs[1], center, new Quaternion(0, 0, 0, 1), this.transform);
+                //Establish it as a room object with a random location
+
+                BoxCollider2D boxCollider = room.GetComponent<BoxCollider2D>();
+
+                if (Physics2D.OverlapBoxAll(boxCollider.bounds.center, boxCollider.bounds.size, 0).Length > 2)
+                {
+                    Destroy(room);
+                }
+                else
+                {
+                    exitSpawned = true;
+                    rooms.Add(room);
+
+                    Tilemap wallTilemap = room.transform.Find("Walls").GetComponent<Tilemap>();
+
+                    foreach (Vector3Int point in wallTilemap.cellBounds.allPositionsWithin)
+                    {
+                        if (wallTilemap.HasTile(point))
+                        {
+                            Vector2Int pos = new Vector2Int((int)wallTilemap.CellToWorld(point).x, (int)wallTilemap.CellToWorld(point).y);
+                            if (!grid.InBounds(pos))
+                                return false;
+
+                            grid[pos] = CellType.Room;
+                            if (grid[pos] == CellType.Room)
+                            {
+                                //Instantiate(roomPrefab, new Vector3(pos.x, pos.y), new Quaternion(0, 0, 0, 1), this.transform);
+                            }
+                        }
+                    }
+                }
+            }
+
         }
+
+
         return true;
     }
 
     private void placeRooms()
     {
 
-        while (!_placeRooms()) ;
-        
+        while (!_placeRooms())
+        {
+            if (rooms != null)
+            {
+                for (int i = 0; i < rooms.Count; i++)
+                {
+                    Destroy(rooms[i].gameObject);
+                }
+                rooms.Clear();
+            }
+        };
+
     }
 
     private void delaunayTriangulation()
     {
         List<Vertex> vertices = new List<Vertex>();
 
-        foreach(var room in rooms)
+        foreach (var room in rooms)
         {
             vertices.Add(new Vertex<GameObject>((Vector2)room.GetComponent<BoxCollider2D>().bounds.center, room));
         }
@@ -153,8 +280,8 @@ public class MapGenerator : MonoBehaviour
     void pathfindHallways()
     {
         DungeonPathfinder2D aStar = new DungeonPathfinder2D(sizeOfGrid);
-
-        foreach(var edge in selectedEdges)
+        
+        foreach (var edge in selectedEdges)
         {
             var startRoom = (edge.U as Vertex<GameObject>).Item;
             var endRoom = (edge.V as Vertex<GameObject>).Item;
@@ -167,19 +294,21 @@ public class MapGenerator : MonoBehaviour
 
             var startPos = new Vector2Int((int)startPosf.x, (int)startPosf.y);
             var endPos = new Vector2Int((int)endPosf.x, (int)endPosf.y);
-            
+
             //RIGHT HERE
             //Debug.Log(startPos + ":" + endPos);
-            var path = aStar.FindPath(startPos, endPos, (DungeonPathfinder2D.Node a, DungeonPathfinder2D.Node b) => {
+            var path = aStar.FindPath(startPos, endPos, (DungeonPathfinder2D.Node a, DungeonPathfinder2D.Node b) =>
+            {
                 var pathCost = new DungeonPathfinder2D.PathCost();
 
                 pathCost.cost = Vector2Int.Distance(b.Position, endPos);    //heuristic
 
-                if(a.Previous != null)
+                if (a.Previous != null)
                 {
                     //Zig Zag Check
                     if ((b.Position.x - a.Previous.Position.x == 1 || b.Position.x - a.Previous.Position.x == -1)
-                        && (b.Position.y - a.Previous.Position.y == 1 || b.Position.y - a.Previous.Position.y == -1)){
+                        && (b.Position.y - a.Previous.Position.y == 1 || b.Position.y - a.Previous.Position.y == -1))
+                    {
                         pathCost.cost += 500;
 
 
@@ -187,7 +316,7 @@ public class MapGenerator : MonoBehaviour
 
                     //Optimal Space Check (Left and Right)
 
-                    if (grid.InBounds(b.Position + Vector2Int.up * 2) && grid.InBounds(b.Position + Vector2Int.down * 2))
+                    if (grid.InBounds(b.Position + Vector2Int.up * 4) && grid.InBounds(b.Position + Vector2Int.down * 4))
                     {
                         if (grid[b.Position + Vector2Int.up] == CellType.Room)
                         {
@@ -208,10 +337,30 @@ public class MapGenerator : MonoBehaviour
                         {
                             pathCost.cost += 1000;
                         }
+
+                        if (grid[b.Position + (Vector2Int.down * 3)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.up * 3)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.down * 4)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.up * 4)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
                     }
 
                     //Optimal Space Check (Up and Down)
-                    if (grid.InBounds(b.Position + Vector2Int.left) && grid.InBounds(b.Position + Vector2Int.right))
+                    if (grid.InBounds(b.Position + Vector2Int.left * 4) && grid.InBounds(b.Position + Vector2Int.right * 4))
                     {
                         if (grid[b.Position + Vector2Int.left] == CellType.Room)
                         {
@@ -222,8 +371,38 @@ public class MapGenerator : MonoBehaviour
                         {
                             pathCost.cost += 1000;
                         }
+
+                        if (grid[b.Position + (Vector2Int.left * 2)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.right * 2)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.left * 3)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.right * 3)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.left * 4)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
+
+                        if (grid[b.Position + (Vector2Int.right * 4)] == CellType.Room)
+                        {
+                            pathCost.cost += 1000;
+                        }
                     }
-                           
+
                 }
 
                 if (grid[b.Position] == CellType.Room)
@@ -263,13 +442,15 @@ public class MapGenerator : MonoBehaviour
                     }
                 }
 
+                
+
                 foreach (var pos in path)
                 {
                     if (grid[pos] == CellType.Hallway)
                     {
                         //Testing full paths
-                        Instantiate(hallwayPrefab, (Vector3Int)pos, new Quaternion(0, 0, 0, 1), this.transform);
-
+                        hallwayInstances[grid.GetIndex(pos)] = Instantiate(hallwayPrefab, (Vector3Int)pos, new Quaternion(0, 0, 0, 1), this.transform);
+                        //Debug.Log($"Pos in Gen: { pos } { grid[pos] } { hallwayInstances[grid.GetIndex(pos)] }");
                         if (path.IndexOf(pos) < path.Count - 1 && path.IndexOf(pos) > 0)
                         {
                             //Instantiate(hallwayPrefab, (Vector3Int)pos, new Quaternion(0, 0, 0, 1), this.transform);
@@ -282,18 +463,83 @@ public class MapGenerator : MonoBehaviour
                             var directionForward = nextPos - pos;
                             var directionBackwards = pos - previousPos;
 
-                            if(directionForward == Vector2Int.up || directionForward == Vector2Int.down)
+                            if (directionForward == Vector2Int.up || directionForward == Vector2Int.down)
                             {
                                 if (directionBackwards == Vector2Int.right)
                                 {
+//Adds a wall to behind where the hallway starts
                                     //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), wallTile);
                                     //Instantiate(testPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
-                                    if (directionForward == Vector2Int.up) {
+                                    if (directionForward == Vector2Int.up)
+                                    {
+                                        if (grid[pos + Vector2Int.down] == CellType.None && wallInstances[grid.GetIndex(pos + Vector2Int.down)] == null)
+                                        {
+                                            grid[pos + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.right] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.right + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.right + Vector2Int.right] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right + Vector2Int.right)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.right + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.left] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.left + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.left + Vector2Int.left] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left + Vector2Int.left)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.left + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right + Vector2Int.down), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                     if (directionForward == Vector2Int.down)
                                     {
+                                        if (grid[pos + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.right + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.right + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.right + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.left + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.left + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.left + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right + Vector2Int.up), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
@@ -303,26 +549,117 @@ public class MapGenerator : MonoBehaviour
                                 {
                                     //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), wallTile);
                                     //Instantiate(testPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
-                                    if (directionForward == Vector2Int.up) {
+                                    if (directionForward == Vector2Int.up)
+                                    {
+                                        if (grid[pos + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.right + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.right + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.right + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.right + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.down + Vector2Int.left + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.down + Vector2Int.left + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.down + Vector2Int.left + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.left + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left + Vector2Int.down), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                     if (directionForward == Vector2Int.down)
                                     {
+                                        if (grid[pos + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.right + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.right + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.right + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.up + Vector2Int.left + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.up + Vector2Int.left + Vector2Int.left] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.up + Vector2Int.left + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left + Vector2Int.up), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                 }
 
                                 grid[pos + Vector2Int.left] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.left)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.left)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
                                 //floorTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), floorTile);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
 
                                 grid[pos + Vector2Int.right] = CellType.Hallway;
+                                
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.right)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.right)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
                                 //floorTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), floorTile);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+
+                                grid[pos + Vector2Int.left * 2] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.left * 2)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.left * 2)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.left * 2), new Quaternion(0, 0, 0, 1), this.transform);
+                                //floorTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), floorTile);
+                                //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.left), wallTile);
+                                //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+
+                                grid[pos + Vector2Int.right * 2] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.right * 2)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.right * 2)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.right * 2), new Quaternion(0, 0, 0, 1), this.transform);
+                                //floorTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), floorTile);
+                                //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.right), wallTile);
+                                //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+
+//Handles the invisible walls. If its not a room tile already than it becomes a wall
+                                if(grid[pos + Vector2Int.left * 3] == CellType.None)
+                                {
+                                    grid[pos + Vector2Int.left * 3] = CellType.Wall;
+                                    wallInstances[grid.GetIndex(pos + Vector2Int.left * 3)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left * 3), new Quaternion(0, 0, 0, 1), this.transform);
+                                }
+                                if (grid[pos + Vector2Int.right * 3] == CellType.None)
+                                {
+                                    grid[pos + Vector2Int.right * 3] = CellType.Wall;
+                                    wallInstances[grid.GetIndex(pos + Vector2Int.right * 3)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right * 3), new Quaternion(0, 0, 0, 1), this.transform);
+                                }
+
                             }
 
                             if (directionForward == Vector2Int.right || directionForward == Vector2Int.left)
@@ -330,12 +667,77 @@ public class MapGenerator : MonoBehaviour
                                 if (directionBackwards == Vector2Int.up)
                                 {
                                     //Instantiate(testPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
-                                    if (directionForward == Vector2Int.left) {
+                                    if (directionForward == Vector2Int.left)
+                                    {
+                                        if (grid[pos + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.up] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.up + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.up + Vector2Int.up] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.up + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.down] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.down + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.down + Vector2Int.down] = CellType.Wall;
+                                            wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.down + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up + Vector2Int.right), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                     if (directionForward == Vector2Int.right)
                                     {
+                                        if (grid[pos + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.up + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.up + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.down + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.down + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
                                         //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up + Vector2Int.left), wallTile);
                                         //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
@@ -344,37 +746,130 @@ public class MapGenerator : MonoBehaviour
                                 if (directionBackwards == Vector2Int.down)
                                 {
                                     //Instantiate(testPrefab, (Vector3Int)(pos + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
-                                    if (directionForward == Vector2Int.left) {
-                                        //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.down + Vector2Int.right), wallTile);
-                                        //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                    //Instantiate(testPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                    if (directionForward == Vector2Int.left)
+                                    {
+                                        if (grid[pos + Vector2Int.right] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.right)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.right)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.up + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.up + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.up + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.up + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.right + Vector2Int.down + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.right + Vector2Int.down + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.right + Vector2Int.down + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.right + Vector2Int.down + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up + Vector2Int.right), wallTile);
+                                        //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.right), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                     if (directionForward == Vector2Int.right)
                                     {
-                                        //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.down + Vector2Int.left), wallTile);
-                                        //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.down + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        if (grid[pos + Vector2Int.left] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left)] == null) 
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.up + Vector2Int.up] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.up + Vector2Int.up] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.up + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+
+                                        if (grid[pos + Vector2Int.left + Vector2Int.down + Vector2Int.down] == CellType.None)
+                                        {
+                                            grid[pos + Vector2Int.left + Vector2Int.down + Vector2Int.down] = CellType.Wall;
+                                            if (wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down)] == null)
+                                                wallInstances[grid.GetIndex(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.left + Vector2Int.down + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
+                                        }
+                                        //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up + Vector2Int.left), wallTile);
+                                        //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up + Vector2Int.left), new Quaternion(0, 0, 0, 1), this.transform);
                                     }
                                 }
 
+                                
+
                                 grid[pos + Vector2Int.up] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.up)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.up)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up), new Quaternion(0, 0, 0, 1), this.transform);
 
                                 grid[pos + Vector2Int.up * 2] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.up * 2)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.up * 2)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.up * 2), new Quaternion(0, 0, 0, 1), this.transform);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.up * 2), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.up * 2), new Quaternion(0, 0, 0, 1), this.transform);
 
                                 grid[pos + Vector2Int.down] = CellType.Hallway;
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.down)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.down)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
                                 //floorTilemap.SetTile((Vector3Int)(pos + Vector2Int.down), floorTile);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.down), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.down), new Quaternion(0, 0, 0, 1), this.transform);
 
                                 grid[pos + Vector2Int.down * 2] = CellType.Hallway;
+
+                                if (hallwayInstances[grid.GetIndex(pos + Vector2Int.down * 2)] == null)
+                                    hallwayInstances[grid.GetIndex(pos + Vector2Int.down * 2)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.down * 2), new Quaternion(0, 0, 0, 1), this.transform);
                                 //wallTilemap.SetTile((Vector3Int)(pos + Vector2Int.down * 2), wallTile);
                                 //Instantiate(roomPrefab, (Vector3Int)(pos + Vector2Int.down * 2), new Quaternion(0, 0, 0, 1), this.transform);
+
+//Handles the invisible walls. If its not a room tile already than it becomes a wall
+                                if (grid[pos + Vector2Int.up * 3] == CellType.None)
+                                {
+                                    wallInstances[grid.GetIndex(pos + Vector2Int.up * 3)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.up * 3), new Quaternion(0, 0, 0, 1), this.transform);
+                                }
+                                if (grid[pos + Vector2Int.down * 3] == CellType.None)
+                                {
+                                    wallInstances[grid.GetIndex(pos + Vector2Int.down * 3)] = Instantiate(wallPrefab, (Vector3Int)(pos + Vector2Int.down * 3), new Quaternion(0, 0, 0, 1), this.transform);
+                                }
+                                
                             }
                         }
 
-
+                        #region
                         //get new position in path with path.FindIndex(pos) + 1, handle end of list problem probably.
 
                         //somehow check the direction related to the two positions to note direction inteded for the path.
@@ -547,7 +1042,7 @@ public class MapGenerator : MonoBehaviour
 
                         //PlaceHallway(pos);
                         //if(grid[pos])
-
+                        #endregion
                     }
                 }
             }
@@ -566,7 +1061,7 @@ public class MapGenerator : MonoBehaviour
     {
         Gizmos.color = Color.green;
 
-        if(delaunay != null)
+        if (delaunay != null)
         {
             foreach (DelaunayTriangulation.Edge v in delaunay.Edges)
             {
@@ -589,7 +1084,7 @@ public class MapGenerator : MonoBehaviour
     }
 
 
-    public void pruneRooms()
+    public bool pruneRooms()
     {
         var roomsInGraph = new HashSet<GameObject>();
         foreach (var edge in selectedEdges)
@@ -606,11 +1101,25 @@ public class MapGenerator : MonoBehaviour
             if (!roomsInGraph.Contains(room))
             {
                 Object.Destroy(room);
+                if (room.name.Contains("Entrance") || room.name.Contains("Exit"))
+                {
+                    return true;
+                }
+                
             }
         }
+        return false;
     }
 
     public void generateDungeon()
+    {
+
+        DestroyEverything();
+        StartCoroutine(DeferRegen());
+        
+    }
+
+    public void DestroyEverything()
     {
         if (rooms != null)
         {
@@ -620,21 +1129,128 @@ public class MapGenerator : MonoBehaviour
             }
             rooms.Clear();
         }
+        for (int i = 0; i < wallInstances.Length; i++)
+        {
+            Destroy(wallInstances[i]);
+            wallInstances[i] = null;
+        }
+        foreach (var i in GameObject.FindGameObjectsWithTag("Wall"))
+        {
+            Destroy(i);
+        }
+
         grid = new Grid2D<CellType>(sizeOfGrid, Vector2Int.zero);
+        hallwayInstances = new GameObject[grid.Size.x * grid.Size.y];
+        wallInstances = new GameObject[grid.Size.x * grid.Size.y];
         floorTilemap.ClearAllTiles();
         wallTilemap.ClearAllTiles();
         var objects = GameObject.FindGameObjectsWithTag("HallwayBit");
-        Debug.Log(objects.Length);
+        //Debug.Log(objects.Length);
         foreach (var o in objects)
         {
             Object.Destroy(o);
         }
-
-        placeRooms();
-        delaunayTriangulation();
-        minimumSpanningTree();
-        pruneRooms();
-        pathfindHallways();
     }
+
+    IEnumerator DeferRegen()
+    {
+        yield return new WaitForEndOfFrame();
+
+        var invalid = true;
+        while (invalid)
+        {
+            placeRooms();
+            delaunayTriangulation();
+            minimumSpanningTree();
+            invalid = pruneRooms();
+            pathfindHallways();
+            cleanUp();
+            cleanUp();
+            cleanUp();
+            cleanUp();
+
+            if (invalid)
+            {
+                DestroyEverything();
+                yield return new WaitForEndOfFrame();
+            }
+        }
+        
+
+        yield return new WaitForEndOfFrame();
+        GameObject.FindGameObjectWithTag("Player").transform.position = GameObject.FindGameObjectWithTag("PlayerSpawn").transform.position;
+    }
+
+    private bool SquareBottomRight(Vector2Int buttomRightPos)
+    {
+        return grid[buttomRightPos + Vector2Int.left] == CellType.Hallway
+            && grid[buttomRightPos + Vector2Int.up] == CellType.Hallway
+            && grid[buttomRightPos + Vector2Int.up + Vector2Int.left] == CellType.Hallway
+            ;
+    }
+
+    private bool SquareBottomLeft(Vector2Int bottomLeftPos)
+    {
+        return grid[bottomLeftPos + Vector2Int.up] == CellType.Hallway
+            && grid[bottomLeftPos + Vector2Int.right] == CellType.Hallway
+            && grid[bottomLeftPos + Vector2Int.right + Vector2Int.up] == CellType.Hallway;
+    }
+
+    private bool SquareTopLeft(Vector2Int topLeftPos)
+    {
+        return grid[topLeftPos + Vector2Int.right] == CellType.Hallway
+            && grid[topLeftPos + Vector2Int.down] == CellType.Hallway
+            && grid[topLeftPos + Vector2Int.down + Vector2Int.right] == CellType.Hallway;
+    }
+
+    private bool SquareTopRight(Vector2Int topRightPos)
+    {
+        return grid[topRightPos + Vector2Int.down] == CellType.Hallway
+            && grid[topRightPos + Vector2Int.left] == CellType.Hallway
+            && grid[topRightPos + Vector2Int.down + Vector2Int.left] == CellType.Hallway;
+    }
+
+    private bool IsGapped(CellType a, CellType b)
+    {
+        return (a == CellType.None && b == CellType.Room) || (a == CellType.Room && b == CellType.None);
+
+    }
+    private bool NoGap(Vector2Int cell, Vector2Int dir)
+    {
+        return !IsGapped(grid[cell + dir], grid[cell + dir + dir]);
+    }
+
+    //                                hallwayInstances[grid.GetIndex(pos + Vector2Int.down * 2)] = Instantiate(hallwayPrefab, (Vector3Int)(pos + Vector2Int.down * 2), new Quaternion(0, 0, 0, 1), this.transform);
+
+
+    public void cleanUp()
+    {
+    
+        for (int i = 0; i < wallInstances.Length; i++)
+        {
+            if (wallInstances[i] != null)
+            {
+                if (hallwayInstances[i] != null)
+                {
+                    Destroy(wallInstances[i].gameObject);
+                    Destroy(wallInstances[i]);
+                    hallwayInstances[i] = Instantiate(hallwayPrefab, hallwayInstances[i].transform.position , new Quaternion(0, 0, 0, 1), this.transform);
+                }
+                if(hallwayInstances[grid.GetIndex(new Vector2Int((int) wallInstances[i].transform.position.x + 1, (int) wallInstances[i].transform.position.y))] != null && hallwayInstances[grid.GetIndex(new Vector2Int((int)wallInstances[i].transform.position.x - 1, (int)wallInstances[i].transform.position.y))] != null)
+                {
+                    Destroy(wallInstances[i].gameObject);
+                    Destroy(wallInstances[i]);
+                    hallwayInstances[i] = Instantiate(hallwayPrefab, wallInstances[i].transform.position, new Quaternion(0, 0, 0, 1), this.transform);
+                }
+                if (hallwayInstances[grid.GetIndex(new Vector2Int((int)wallInstances[i].transform.position.x , (int)wallInstances[i].transform.position.y + 1))] != null && hallwayInstances[grid.GetIndex(new Vector2Int((int)wallInstances[i].transform.position.x, (int)wallInstances[i].transform.position.y - 1))] != null)
+                {
+                    Destroy(wallInstances[i].gameObject);
+                    Destroy(wallInstances[i]);
+                    hallwayInstances[i] = Instantiate(hallwayPrefab, wallInstances[i].transform.position, new Quaternion(0, 0, 0, 1), this.transform);
+                }
+            }
+        }
+    }
+
 }
 
